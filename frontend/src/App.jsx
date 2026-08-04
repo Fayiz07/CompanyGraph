@@ -1,0 +1,414 @@
+import { useState, useEffect, useRef } from 'react';
+import { Search, Loader2, Network as NetworkIcon, User, Building, Briefcase, Users, CheckCircle, BarChart2, Home } from 'lucide-react';
+import { Network as VisNetwork } from 'vis-network';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import './index.css';
+
+function App() {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [graphData, setGraphData] = useState(null);
+  
+  // New states for multiple matches
+  const [matchingNodes, setMatchingNodes] = useState([]);
+  const [selectedNodeId, setSelectedNodeId] = useState(null);
+  const [selectedNodeDetails, setSelectedNodeDetails] = useState(null);
+  const [statsData, setStatsData] = useState([]);
+  const [isStatsLoading, setIsStatsLoading] = useState(true);
+  
+  const graphRef = useRef(null);
+  const networkRef = useRef(null);
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (!searchTerm.trim()) return;
+
+    setIsLoading(true);
+    setError(null);
+    setHasSearched(true);
+    setGraphData(null);
+    setMatchingNodes([]);
+    setSelectedNodeId(null);
+    setSelectedNodeDetails(null);
+
+    try {
+      const response = await fetch(`http://localhost:8000/api/graph/?employee=${encodeURIComponent(searchTerm)}`);
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch graph data');
+      }
+
+      if (data.nodes.length === 0) {
+        setError('No employee found with that name.');
+      } else {
+        setGraphData(data);
+        
+        // Find ALL root nodes that match the search term
+        const matches = data.nodes.filter(n => n.label === 'Employee' && n.properties.name.toLowerCase().includes(searchTerm.toLowerCase()));
+        
+        setMatchingNodes(matches);
+        
+        if (matches.length > 0) {
+          handleSelectNode(matches[0].id, data);
+        }
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleHome = () => {
+    setSearchTerm('');
+    setHasSearched(false);
+    setGraphData(null);
+    setMatchingNodes([]);
+    setSelectedNodeId(null);
+    setSelectedNodeDetails(null);
+  };
+
+  const handleSelectNode = (nodeId, data = graphData) => {
+    setSelectedNodeId(nodeId);
+    const rootNode = data.nodes.find(n => n.id === nodeId);
+    if (rootNode) {
+      setSelectedNodeDetails(extractNodeDetails(rootNode, data));
+    }
+    
+    // Highlight node in vis-network
+    if (networkRef.current) {
+      networkRef.current.selectNodes([nodeId]);
+      networkRef.current.focus(nodeId, { scale: 1.2, animation: { duration: 500, easingFunction: 'easeInOutQuad' } });
+    }
+  };
+
+  const extractNodeDetails = (rootNode, data) => {
+    const managerEdge = data.edges.find(e => e.source === rootNode.id && e.type === 'REPORTS_TO');
+    const manager = managerEdge ? data.nodes.find(n => n.id === managerEdge.target) : null;
+    
+    const reportsEdges = data.edges.filter(e => e.target === rootNode.id && e.type === 'REPORTS_TO');
+    const reports = reportsEdges.map(e => data.nodes.find(n => n.id === e.source)).filter(Boolean);
+
+    const deptEdge = data.edges.find(e => e.source === rootNode.id && e.type === 'WORKS_IN');
+    const department = deptEdge ? data.nodes.find(n => n.id === deptEdge.target) : null;
+    
+    const projectEdges = data.edges.filter(e => e.source === rootNode.id && (e.type === 'WORKS_ON' || e.type === 'MANAGES'));
+    const projects = projectEdges.map(e => data.nodes.find(n => n.id === e.target)).filter(Boolean);
+
+    return {
+      ...rootNode.properties,
+      manager: manager ? manager.properties.name : 'None',
+      reports: reports.map(r => r.properties.name),
+      department: department ? department.properties.name : 'Unknown',
+      projects: projects.map(p => p.properties.name)
+    };
+  };
+
+  useEffect(() => {
+    // Fetch stats on mount
+    fetch('http://localhost:8000/api/stats/')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setStatsData(data);
+        } else {
+          console.error("Stats API returned an error:", data);
+        }
+        setIsStatsLoading(false);
+      })
+      .catch(err => {
+        console.error("Failed to fetch stats", err);
+        setIsStatsLoading(false);
+      });
+  }, []);
+
+  useEffect(() => {
+    if (graphRef.current && graphData) {
+      const nodes = graphData.nodes.map(node => ({
+        id: node.id,
+        label: node.label === 'Employee' 
+          ? `*${node.properties.name}*\n${node.properties.role || 'Employee'}` 
+          : `*${node.properties.name}*\n${node.label}`,
+        group: node.label,
+        title: JSON.stringify(node.properties, null, 2),
+      }));
+
+      const edges = graphData.edges.map(edge => {
+        const isReportsTo = edge.type === 'REPORTS_TO';
+        return {
+          from: isReportsTo ? edge.target : edge.source,
+          to: isReportsTo ? edge.source : edge.target,
+          label: edge.type.replace('_', ' '),
+          font: { 
+            align: 'middle', 
+            color: '#e2e8f0', // Brighter text 
+            size: 11,
+            strokeWidth: 4, // Dark outline to pop against lines
+            strokeColor: '#0f172a',
+            vadjust: -15 // Push slightly above the line
+          },
+          // For REPORTS_TO, reverse the arrow so it still points to the manager visually
+          arrows: isReportsTo ? { from: { enabled: true, scaleFactor: 0.5 }, to: { enabled: false } } : undefined
+        };
+      });
+
+      const data = { nodes, edges };
+      
+      const options = {
+        nodes: {
+          shape: 'box',
+          margin: 12,
+          font: { color: '#ffffff', face: 'Inter, sans-serif', size: 13, multi: true, bold: '14px Inter' },
+          borderWidth: 2,
+          borderWidthSelected: 4,
+          shadow: { enabled: true, color: 'rgba(0,0,0,0.4)', size: 10, x: 0, y: 4 },
+          shapeProperties: { borderRadius: 12 }
+        },
+        edges: {
+          color: { color: '#64748b', highlight: '#94a3b8' },
+          width: 2,
+          smooth: { type: 'cubicBezier', forceDirection: 'vertical', roundness: 0.4 },
+          arrows: { to: { enabled: true, scaleFactor: 0.6 } }
+        },
+        groups: {
+          Employee: { color: { background: '#2563eb', border: '#60a5fa', highlight: { background: '#1d4ed8', border: '#93c5fd' } } },
+          Department: { color: { background: '#059669', border: '#34d399', highlight: { background: '#047857', border: '#6ee7b7' } } },
+          Project: { color: { background: '#d97706', border: '#fbbf24', highlight: { background: '#b45309', border: '#fcd34d' } } }
+        },
+        layout: {
+          hierarchical: {
+            enabled: true,
+            direction: 'UD',
+            sortMethod: 'directed',
+            nodeSpacing: 350,
+            levelSeparation: 180
+          }
+        },
+        physics: {
+          enabled: false
+        },
+        interaction: { hover: true, tooltipDelay: 200, selectConnectedEdges: false }
+      };
+
+      if (networkRef.current) {
+        networkRef.current.destroy();
+      }
+
+      networkRef.current = new VisNetwork(graphRef.current, data, options);
+      
+      // Auto-select initial node once network is stable
+      if (selectedNodeId) {
+        networkRef.current.once("afterDrawing", () => {
+          networkRef.current.selectNodes([selectedNodeId]);
+        });
+      }
+      
+      // Handle node click in graph to sync with left panel
+      networkRef.current.on('click', function (params) {
+        if (params.nodes.length > 0) {
+          const clickedNodeId = params.nodes[0];
+          const isMatch = matchingNodes.some(n => n.id === clickedNodeId);
+          if (isMatch) {
+            handleSelectNode(clickedNodeId, graphData);
+          } else {
+             // If clicking random node, just highlight it natively but don't change profile unless it's an employee
+             const node = graphData.nodes.find(n => n.id === clickedNodeId);
+             if (node && node.label === 'Employee') {
+                setSelectedNodeId(clickedNodeId);
+                setSelectedNodeDetails(extractNodeDetails(node, graphData));
+             }
+          }
+        }
+      });
+    }
+  }, [graphData]); // Re-run only when graphData completely changes
+
+  return (
+    <div className="app-container">
+      <header className="header">
+        <h1>Company Graph Dashboard</h1>
+        <form onSubmit={handleSearch} className="search-form">
+          <div className="search-input-wrapper">
+            <Search className="search-icon" size={20} />
+            <input
+              type="text"
+              placeholder="Search employee by name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="search-input"
+            />
+          </div>
+          <button type="submit" className="search-button" disabled={isLoading}>
+            {isLoading ? <Loader2 className="spinner" size={20} /> : 'Search'}
+          </button>
+        </form>
+      </header>
+
+      <main className="main-content">
+        {!hasSearched && !isLoading && (
+          <div className="empty-state">
+            <div className="stats-container" style={{ width: '100%', height: '300px', marginBottom: '2rem' }}>
+              <h2 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '1.5rem' }}>
+                <BarChart2 size={24} color="#3b82f6" /> 
+                Company Breakdown
+              </h2>
+              {isStatsLoading ? (
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+                  <Loader2 className="spinner" size={32} color="#3b82f6" />
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={statsData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
+                    <XAxis dataKey="department" stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 12 }} angle={-25} textAnchor="end" />
+                    <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8' }} />
+                    <Tooltip cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }} contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }} />
+                    <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+                      {statsData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4'][index % 6]} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+            <p style={{ marginTop: '1.5rem', color: '#94a3b8' }}>Use the search bar above to explore the graph structure for a specific employee.</p>
+          </div>
+        )}
+
+        {isLoading && (
+          <div className="loading-state">
+            <Loader2 className="spinner large" size={48} />
+            <p>Querying CognoDB...</p>
+          </div>
+        )}
+
+        {error && (
+          <div className="error-state">
+            <p>{error}</p>
+          </div>
+        )}
+
+        {graphData && !isLoading && (
+          <div className="dashboard">
+            <div className="dashboard-left">
+              
+              {/* Multiple Matches Selection List */}
+              {matchingNodes.length > 1 && (
+                <div className="matches-list-card">
+                  <h4>Found {matchingNodes.length} matches:</h4>
+                  <div className="matches-scroll-container">
+                    {matchingNodes.map(node => (
+                      <div 
+                        key={node.id} 
+                        className={`match-item ${selectedNodeId === node.id ? 'selected' : ''}`}
+                        onClick={() => handleSelectNode(node.id)}
+                      >
+                        <div className="match-info">
+                          <User size={16} />
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span>{node.properties.name}</span>
+                            <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{node.properties.role}</span>
+                          </div>
+                        </div>
+                        {selectedNodeId === node.id && <CheckCircle size={16} className="text-primary" />}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Profile Details */}
+              {selectedNodeDetails ? (
+                <div className="profile-card">
+                  <div className="profile-header">
+                    <User size={48} className="profile-icon" />
+                    <div>
+                      <h2>{selectedNodeDetails.name}</h2>
+                      <span className="profile-role">{selectedNodeDetails.role}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="profile-details">
+                    <div className="detail-item">
+                      <Building size={18} className="detail-icon" />
+                      <div>
+                        <strong>Department</strong>
+                        <p>{selectedNodeDetails.department}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="detail-item">
+                      <Users size={18} className="detail-icon" />
+                      <div>
+                        <strong>Manager</strong>
+                        <p>{selectedNodeDetails.manager}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="detail-item">
+                      <Briefcase size={18} className="detail-icon" />
+                      <div>
+                        <strong>Projects</strong>
+                        <p>{selectedNodeDetails.projects.length > 0 ? selectedNodeDetails.projects.join(', ') : 'None'}</p>
+                      </div>
+                    </div>
+
+                    <div className="detail-item">
+                      <Users size={18} className="detail-icon" />
+                      <div>
+                        <strong>Direct Reports ({selectedNodeDetails.reports.length})</strong>
+                        <div className="reports-list">
+                          {selectedNodeDetails.reports.length > 0 ? selectedNodeDetails.reports.map((report, idx) => (
+                            <span key={idx} className="report-badge">{report}</span>
+                          )) : <p>None</p>}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="profile-card empty">
+                  <p>Select a node to view details.</p>
+                </div>
+              )}
+            </div>
+            
+            <div className="dashboard-right">
+              <div className="graph-card">
+                <div className="graph-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h3>Network Visualization</h3>
+                  <button 
+                    onClick={handleHome} 
+                    style={{ 
+                      background: 'rgba(255, 255, 255, 0.1)', 
+                      border: 'none', 
+                      color: 'white', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '8px', 
+                      padding: '6px 12px', 
+                      borderRadius: '6px', 
+                      cursor: 'pointer',
+                      fontSize: '0.85rem',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
+                    onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
+                  >
+                    <Home size={16} /> Back to Home
+                  </button>
+                </div>
+                <div className="graph-container" ref={graphRef} />
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
+
+export default App;
