@@ -449,7 +449,7 @@ function App() {
 
       network.once("afterDrawing", function() {
         network.moveTo({
-          scale: 0.4,
+          scale: 0.65,
           animation: {
             duration: 800,
             easingFunction: 'easeInOutQuad'
