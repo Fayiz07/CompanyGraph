@@ -176,29 +176,21 @@ function App() {
         setIsOverviewLoading(false);
       })
       .catch(err => {
-        console.error("Failed to fetch overview", err);
         setIsOverviewLoading(false);
       });
+
+    fetch(`${apiUrl}/api/employees/`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setAllEmployees(data);
+        }
+      })
+      .catch(err => console.error("Failed to fetch employees", err));
   }, []);
 
   const openDirectory = () => {
     setShowDirectory(true);
-    if (allEmployees.length === 0) {
-      setIsDirectoryLoading(true);
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      fetch(`${apiUrl}/api/employees/`)
-        .then(res => res.json())
-        .then(data => {
-          if (Array.isArray(data)) {
-            setAllEmployees(data);
-          }
-          setIsDirectoryLoading(false);
-        })
-        .catch(err => {
-          console.error("Failed to fetch employees", err);
-          setIsDirectoryLoading(false);
-        });
-    }
   };
 
   const handleDirectoryClick = (name) => {
@@ -428,17 +420,14 @@ function App() {
         },
         layout: {
           hierarchical: {
-            enabled: false
+            enabled: true,
+            direction: 'UD',
+            sortMethod: 'directed',
+            nodeSpacing: 150,
+            levelSeparation: 100
           }
         },
-        physics: { 
-          enabled: true,
-          barnesHut: {
-            gravitationalConstant: -2000,
-            centralGravity: 0.3,
-            springLength: 150
-          }
-        },
+        physics: { enabled: false },
         interaction: { hover: true, tooltipDelay: 200, zoomView: true, dragView: true }
       };
 
@@ -457,13 +446,17 @@ function App() {
         <form onSubmit={handleSearch} className="search-form">
           <div className="search-input-wrapper">
             <Search className="search-icon" size={20} />
-            <input
-              type="text"
-              placeholder="Search employee by name..."
+            <select
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="search-input"
-            />
+              style={{ appearance: 'none', paddingLeft: '2.5rem' }}
+            >
+              <option value="">Select an employee...</option>
+              {allEmployees.map(emp => (
+                <option key={emp.id} value={emp.name}>{emp.name}</option>
+              ))}
+            </select>
           </div>
           <button type="submit" className="search-button" disabled={isLoading}>
             {isLoading ? <Loader2 className="spinner" size={20} /> : 'Search'}
@@ -698,15 +691,24 @@ function App() {
                   <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
                     {activeQuery === 'shortest' && (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        <input type="text" placeholder="Employee 1" className="search-input" style={{ width: '100%', padding: '0.4rem', fontSize: '0.85rem' }} value={queryInputs.source} onChange={e => setQueryInputs({...queryInputs, source: e.target.value})} />
+                        <select className="search-input" style={{ width: '100%', padding: '0.4rem', fontSize: '0.85rem' }} value={queryInputs.source} onChange={e => setQueryInputs({...queryInputs, source: e.target.value})}>
+                          <option value="">Employee 1</option>
+                          {allEmployees.map(emp => <option key={emp.id} value={emp.name}>{emp.name}</option>)}
+                        </select>
                         <span style={{color: '#94a3b8', fontSize: '0.8rem', textAlign: 'center'}}>to</span>
-                        <input type="text" placeholder="Employee 2" className="search-input" style={{ width: '100%', padding: '0.4rem', fontSize: '0.85rem' }} value={queryInputs.target} onChange={e => setQueryInputs({...queryInputs, target: e.target.value})} />
+                        <select className="search-input" style={{ width: '100%', padding: '0.4rem', fontSize: '0.85rem' }} value={queryInputs.target} onChange={e => setQueryInputs({...queryInputs, target: e.target.value})}>
+                          <option value="">Employee 2</option>
+                          {allEmployees.map(emp => <option key={emp.id} value={emp.name}>{emp.name}</option>)}
+                        </select>
                         <button className="search-button" style={{minWidth: '0', padding: '0.4rem', marginTop: '0.5rem', fontSize: '0.85rem'}} onClick={() => executeAdvancedQuery('shortest')}>Find Path</button>
                       </div>
                     )}
                     {(activeQuery === 'hierarchy' || activeQuery === 'projects') && (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        <input type="text" placeholder={activeQuery === 'hierarchy' ? "Manager Name" : "Employee Name"} className="search-input" style={{ width: '100%', padding: '0.4rem', fontSize: '0.85rem' }} value={queryInputs.employee} onChange={e => setQueryInputs({...queryInputs, employee: e.target.value})} />
+                        <select className="search-input" style={{ width: '100%', padding: '0.4rem', fontSize: '0.85rem' }} value={queryInputs.employee} onChange={e => setQueryInputs({...queryInputs, employee: e.target.value})}>
+                          <option value="">Select Employee</option>
+                          {allEmployees.map(emp => <option key={emp.id} value={emp.name}>{emp.name}</option>)}
+                        </select>
                         <button className="search-button" style={{minWidth: '0', padding: '0.4rem', fontSize: '0.85rem'}} onClick={() => executeAdvancedQuery(activeQuery)}>Run Query</button>
                       </div>
                     )}
