@@ -394,12 +394,11 @@ function App() {
           font: { 
             align: 'middle', 
             color: '#e2e8f0', 
-            size: 11,
-            strokeWidth: 4, 
+            size: 9,
+            strokeWidth: 2, 
             strokeColor: '#0f172a',
-            vadjust: -15 
+            vadjust: -10 
           },
-          value: edge.properties.weight,
           arrows: { to: { enabled: false } }
         };
       });
@@ -446,16 +445,6 @@ function App() {
 
       const network = new VisNetwork(overviewGraphRef.current, { nodes, edges }, options);
       overviewNetworkRef.current = network;
-
-      network.once("afterDrawing", function() {
-        network.moveTo({
-          scale: 1.2,
-          animation: {
-            duration: 800,
-            easingFunction: 'easeInOutQuad'
-          }
-        });
-      });
     }
   }, [overviewData]);
 
@@ -486,9 +475,9 @@ function App() {
 
       <main className="main-content">
         {!hasSearched && !isLoading && (
-          <div className="empty-state" style={{ display: 'flex', flexDirection: 'row', gap: '2rem', height: '100%', minHeight: '500px', width: '100%', alignItems: 'stretch' }}>
+          <div className="empty-state" style={{ display: 'flex', flexDirection: 'column', gap: '2rem', height: '100%', minHeight: '500px', width: '100%', alignItems: 'stretch' }}>
             
-            {/* Overview Graph (Left) */}
+            {/* Overview Graph (Top) */}
             <div className="graph-card" style={{ flex: '1', display: 'flex', flexDirection: 'column', background: 'var(--card-bg-solid)', borderRadius: '16px', overflow: 'hidden' }}>
               <div className="graph-header" style={{ borderBottom: '1px solid var(--border-color)', padding: '1rem' }}>
                 <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}><NetworkIcon size={18} /> Company Overview</h3>
@@ -502,9 +491,9 @@ function App() {
               )}
             </div>
 
-            {/* Stats Chart (Right) */}
-            <div style={{ flex: '1', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-              <div className="stats-container" style={{ width: '100%', height: '300px', flexShrink: 0 }}>
+            <div style={{ display: 'flex', flexDirection: 'row', gap: '2rem', marginTop: '1rem' }}>
+              {/* Stats Chart (Bottom Left) */}
+              <div className="stats-container" style={{ flex: '1', height: '300px' }}>
                 <h2 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '1.5rem' }}>
                   <BarChart2 size={24} color="#3b82f6" /> 
                   Company Breakdown
@@ -528,7 +517,7 @@ function App() {
                   </ResponsiveContainer>
                 )}
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', marginTop: 'auto', marginBottom: 'auto' }}>
+              <div style={{ flex: '1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1rem', background: 'var(--card-bg-solid)', borderRadius: '16px', padding: '2rem', border: '1px solid var(--border-color)' }}>
                 <p style={{ color: '#94a3b8' }}>Use the search bar above to explore the graph structure for a specific employee.</p>
                 <button 
                   onClick={openDirectory}
