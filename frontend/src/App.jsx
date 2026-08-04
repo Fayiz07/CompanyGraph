@@ -589,8 +589,27 @@ function App() {
         )}
 
         {error && (
-          <div className="error-state">
+          <div className="error-state" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
             <p>{error}</p>
+            <button 
+              onClick={handleHome}
+              style={{
+                background: 'rgba(136, 192, 208, 0.1)',
+                border: '1px solid rgba(136, 192, 208, 0.5)',
+                color: '#88c0d0',
+                padding: '8px 16px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'all 0.2s'
+              }}
+              onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(136, 192, 208, 0.2)'; e.currentTarget.style.color = '#81a1c1'; }}
+              onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(136, 192, 208, 0.1)'; e.currentTarget.style.color = '#88c0d0'; }}
+            >
+              <Home size={18} /> Back to Home
+            </button>
           </div>
         )}
 
