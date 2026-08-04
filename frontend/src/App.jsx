@@ -391,7 +391,7 @@ function App() {
           from: edge.source,
           to: edge.target,
           label: edge.type,
-          font: { align: 'middle', color: '#ffffff', size: 14, strokeWidth: 3, strokeColor: '#0f172a' },
+          font: { align: 'middle', color: '#e2e8f0', size: 9, strokeWidth: 2, strokeColor: '#0f172a' },
           value: edge.properties.weight,
           arrows: { to: { enabled: false } }
         };
@@ -422,8 +422,8 @@ function App() {
             enabled: true,
             direction: 'UD',
             sortMethod: 'directed',
-            nodeSpacing: 150,
-            levelSeparation: 100
+            nodeSpacing: 250,
+            levelSeparation: 250
           }
         },
         physics: { enabled: false },
