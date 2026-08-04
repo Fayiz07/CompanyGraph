@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Search, Loader2, Network as NetworkIcon, User, Building, Briefcase, Users, CheckCircle, BarChart2, Home, List, X } from 'lucide-react';
+import { Search, Loader2, Network as NetworkIcon, User, Building, Briefcase, Users, CheckCircle, BarChart2, Home, List, X, Info } from 'lucide-react';
 import { Network as VisNetwork } from 'vis-network';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import './index.css';
@@ -20,6 +20,7 @@ function App() {
   const [showDirectory, setShowDirectory] = useState(false);
   const [allEmployees, setAllEmployees] = useState([]);
   const [isDirectoryLoading, setIsDirectoryLoading] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
   const [activeQuery, setActiveQuery] = useState(null);
   const [queryInputs, setQueryInputs] = useState({ source: '', target: '', employee: '' });
   
@@ -462,25 +463,35 @@ function App() {
     <div className="app-container">
       <header className="header">
         <h1>Company Graph Dashboard</h1>
-        <form onSubmit={handleSearch} className="search-form">
-          <div className="search-input-wrapper">
-            <Search className="search-icon" size={20} />
-            <select
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="search-input"
-              style={{ appearance: 'none', paddingLeft: '2.5rem' }}
-            >
-              <option value="">Select an employee...</option>
-              {allEmployees.map(emp => (
-                <option key={emp.id} value={emp.name}>{emp.name}</option>
-              ))}
-            </select>
-          </div>
-          <button type="submit" className="search-button" disabled={isLoading}>
-            {isLoading ? <Loader2 className="spinner" size={20} /> : 'Search'}
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <button 
+            type="button" 
+            onClick={() => setShowGuide(true)} 
+            className="search-button" 
+            style={{ background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-light)', display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <Info size={18} /> Guide
           </button>
-        </form>
+          <form onSubmit={handleSearch} className="search-form">
+            <div className="search-input-wrapper">
+              <Search className="search-icon" size={20} />
+              <select
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="search-input"
+                style={{ appearance: 'none', paddingLeft: '2.5rem' }}
+              >
+                <option value="">Select an employee...</option>
+                {allEmployees.map(emp => (
+                  <option key={emp.id} value={emp.name}>{emp.name}</option>
+                ))}
+              </select>
+            </div>
+            <button type="submit" className="search-button" disabled={isLoading}>
+              {isLoading ? <Loader2 className="spinner" size={20} /> : 'Search'}
+            </button>
+          </form>
+        </div>
       </header>
 
       <main className="main-content">
@@ -799,6 +810,48 @@ function App() {
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Guide Modal */}
+      {showGuide && (
+        <div className="modal-overlay" onClick={() => setShowGuide(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '600px' }}>
+            <div className="modal-header">
+              <h2>How to Use This Website</h2>
+              <button className="close-button" onClick={() => setShowGuide(false)}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className="modal-body" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', maxHeight: '70vh', overflowY: 'auto' }}>
+              <div>
+                <h3 style={{ color: 'var(--text-light)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}><NetworkIcon size={18} color="#3b82f6"/> Purpose</h3>
+                <p style={{ color: '#94a3b8', lineHeight: '1.6' }}>
+                  This dashboard is a visualization tool built on top of a Graph Database. It allows you to explore our company's structure, employee hierarchy, and project collaborations in a highly interactive way.
+                </p>
+              </div>
+              <div>
+                <h3 style={{ color: 'var(--text-light)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}><Search size={18} color="#10b981"/> Search & Explore</h3>
+                <p style={{ color: '#94a3b8', lineHeight: '1.6' }}>
+                  Use the <strong>search dropdown</strong> in the top right to select a specific employee. This will reveal their immediate network, showing who they manage, who they report to, and what projects they work on.
+                </p>
+              </div>
+              <div>
+                <h3 style={{ color: 'var(--text-light)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={18} color="#f59e0b"/> Interactions</h3>
+                <ul style={{ color: '#94a3b8', lineHeight: '1.6', paddingLeft: '1.2rem', margin: 0 }}>
+                  <li><strong>Click</strong> any node to view detailed information in the side panel.</li>
+                  <li><strong>Double-click</strong> any node to automatically expand the graph and pull in their direct connections from the database!</li>
+                  <li><strong>Drag</strong> the background to pan, and scroll to zoom.</li>
+                </ul>
+              </div>
+              <div>
+                <h3 style={{ color: 'var(--text-light)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}><BarChart2 size={18} color="#8b5cf6"/> Advanced Analytics</h3>
+                <p style={{ color: '#94a3b8', lineHeight: '1.6' }}>
+                  When viewing an employee's profile, look at the bottom of the left panel for <strong>Advanced Graph Analytics</strong>. You can run complex graph algorithms directly against the database to find the Shortest Path between two people, extract deep reporting hierarchies, or discover massive project collaboration webs.
+                </p>
+              </div>
             </div>
           </div>
         </div>
