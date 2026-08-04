@@ -34,7 +34,8 @@ function App() {
     setSelectedNodeDetails(null);
 
     try {
-      const response = await fetch(`http://localhost:8000/api/graph/?employee=${encodeURIComponent(searchTerm)}`);
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${apiUrl}/api/graph/?employee=${encodeURIComponent(searchTerm)}`);
       const data = await response.json();
       
       if (!response.ok) {
@@ -109,7 +110,8 @@ function App() {
 
   useEffect(() => {
     // Fetch stats on mount
-    fetch('http://localhost:8000/api/stats/')
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    fetch(`${apiUrl}/api/stats/`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
