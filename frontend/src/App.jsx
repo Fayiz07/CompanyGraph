@@ -208,6 +208,7 @@ function App() {
     setSelectedNodeId(null);
     setSelectedNodeDetails(null);
     setActiveQuery(null);
+    setError(null);
   };
 
   const executeAdvancedQuery = async (type) => {
