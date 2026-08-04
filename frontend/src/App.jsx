@@ -475,10 +475,10 @@ function App() {
 
       <main className="main-content">
         {!hasSearched && !isLoading && (
-          <div className="empty-state" style={{ display: 'flex', flexDirection: 'column', gap: '2rem', height: '100%', minHeight: '500px', width: '100%', alignItems: 'stretch' }}>
+          <div className="empty-state" style={{ display: 'flex', flexDirection: 'row', gap: '2rem', height: '100%', minHeight: '500px', width: '100%', alignItems: 'stretch' }}>
             
-            {/* Overview Graph (Top) */}
-            <div className="graph-card" style={{ flex: '1', display: 'flex', flexDirection: 'column', background: 'var(--card-bg-solid)', borderRadius: '16px', overflow: 'hidden' }}>
+            {/* Overview Graph (Left) */}
+            <div className="graph-card" style={{ flex: '65', display: 'flex', flexDirection: 'column', background: 'var(--card-bg-solid)', borderRadius: '16px', overflow: 'hidden' }}>
               <div className="graph-header" style={{ borderBottom: '1px solid var(--border-color)', padding: '1rem' }}>
                 <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}><NetworkIcon size={18} /> Company Overview</h3>
               </div>
@@ -491,9 +491,10 @@ function App() {
               )}
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'row', gap: '2rem', marginTop: '1rem' }}>
-              {/* Stats Chart (Bottom Left) */}
-              <div className="stats-container" style={{ flex: '1', height: '300px' }}>
+            {/* Right Column */}
+            <div style={{ flex: '35', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              {/* Stats Chart */}
+              <div className="stats-container" style={{ width: '100%', height: '300px', flexShrink: 0 }}>
                 <h2 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '1.5rem' }}>
                   <BarChart2 size={24} color="#3b82f6" /> 
                   Company Breakdown
