@@ -375,34 +375,34 @@ def get_overview_graph(request):
         with GraphDatabase.driver(URI, auth=AUTH) as driver:
             with driver.session() as session:
                 query = """
-                MATCH (n)-[r]->(m)
-                RETURN n, r, m
+                MATCH (d:Department)<-[:WORKS_IN]-(e:Employee)-[:WORKS_ON|MANAGES]->(p:Project)
+                RETURN d, p, count(e) as weight
                 """
                 result = session.run(query)
                 nodes = {}
                 edges = []
                 for record in result:
-                    n = record["n"]
-                    m = record["m"]
-                    r = record["r"]
+                    d = record["d"]
+                    p = record["p"]
+                    weight = record["weight"]
                     
-                    if str(n.id) not in nodes:
-                        nodes[str(n.id)] = {
-                            "id": str(n.id),
-                            "label": list(n.labels)[0] if n.labels else "Unknown",
-                            "properties": dict(n)
+                    if str(d.id) not in nodes:
+                        nodes[str(d.id)] = {
+                            "id": str(d.id),
+                            "label": "Department",
+                            "properties": dict(d)
                         }
-                    if str(m.id) not in nodes:
-                        nodes[str(m.id)] = {
-                            "id": str(m.id),
-                            "label": list(m.labels)[0] if m.labels else "Unknown",
-                            "properties": dict(m)
+                    if str(p.id) not in nodes:
+                        nodes[str(p.id)] = {
+                            "id": str(p.id),
+                            "label": "Project",
+                            "properties": dict(p)
                         }
                     edges.append({
-                        "source": str(r.start_node.id),
-                        "target": str(r.end_node.id),
-                        "type": r.type,
-                        "properties": dict(r)
+                        "source": str(d.id),
+                        "target": str(p.id),
+                        "type": "COLLABORATES",
+                        "properties": {"weight": weight}
                     })
                 
                 unique_edges = { (e["source"], e["target"], e["type"]): e for e in edges }.values()

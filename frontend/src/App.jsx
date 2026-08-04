@@ -395,13 +395,13 @@ function App() {
       }));
 
       const edges = overviewData.edges.map(edge => {
-        const isReportsTo = edge.type === 'REPORTS_TO';
         return {
-          from: isReportsTo ? edge.target : edge.source,
-          to: isReportsTo ? edge.source : edge.target,
-          label: edge.type.replace('_', ' '),
+          from: edge.source,
+          to: edge.target,
+          label: edge.type,
           font: { align: 'middle', color: '#e2e8f0', size: 9, strokeWidth: 2, strokeColor: '#0f172a' },
-          arrows: isReportsTo ? { from: { enabled: true, scaleFactor: 0.3 }, to: { enabled: false } } : undefined
+          value: edge.properties.weight,
+          arrows: { to: { enabled: false } }
         };
       });
 
@@ -415,25 +415,30 @@ function App() {
         },
         edges: {
           color: { color: '#64748b' },
-          width: 1,
-          smooth: { type: 'cubicBezier', forceDirection: 'vertical', roundness: 0.4 },
-          arrows: { to: { enabled: true, scaleFactor: 0.4 } }
+          smooth: { type: 'continuous' },
+          scaling: {
+            min: 1,
+            max: 5,
+            label: { enabled: false }
+          }
         },
         groups: {
-          Employee: { color: { background: '#2563eb', border: '#60a5fa' } },
           Department: { color: { background: '#059669', border: '#34d399' } },
           Project: { color: { background: '#d97706', border: '#fbbf24' } }
         },
         layout: {
           hierarchical: {
-            enabled: true,
-            direction: 'UD',
-            sortMethod: 'directed',
-            nodeSpacing: 150,
-            levelSeparation: 100
+            enabled: false
           }
         },
-        physics: { enabled: false },
+        physics: { 
+          enabled: true,
+          barnesHut: {
+            gravitationalConstant: -2000,
+            centralGravity: 0.3,
+            springLength: 150
+          }
+        },
         interaction: { hover: true, tooltipDelay: 200, zoomView: true, dragView: true }
       };
 
