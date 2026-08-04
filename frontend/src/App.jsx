@@ -391,7 +391,7 @@ function App() {
           from: edge.source,
           to: edge.target,
           label: edge.type,
-          font: { align: 'middle', color: '#e2e8f0', size: 9, strokeWidth: 2, strokeColor: '#0f172a' },
+          font: { align: 'middle', color: '#ffffff', size: 14, strokeWidth: 3, strokeColor: '#0f172a' },
           value: edge.properties.weight,
           arrows: { to: { enabled: false } }
         };
@@ -400,18 +400,17 @@ function App() {
       const options = {
         nodes: {
           shape: 'box',
-          margin: 8,
-          font: { color: '#ffffff', face: 'Inter, sans-serif', size: 10, multi: true, bold: '11px Inter' },
+          margin: 12,
+          font: { color: '#ffffff', face: 'Inter, sans-serif', size: 14, multi: true, bold: '16px Inter' },
           borderWidth: 1,
           shapeProperties: { borderRadius: 8 }
         },
         edges: {
-          color: { color: '#64748b' },
+          color: { color: '#94a3b8' },
           smooth: { type: 'continuous' },
           scaling: {
             min: 1,
-            max: 5,
-            label: { enabled: false }
+            max: 5
           }
         },
         groups: {
@@ -435,7 +434,18 @@ function App() {
         overviewNetworkRef.current.destroy();
       }
 
-      overviewNetworkRef.current = new VisNetwork(overviewGraphRef.current, { nodes, edges }, options);
+      const network = new VisNetwork(overviewGraphRef.current, { nodes, edges }, options);
+      overviewNetworkRef.current = network;
+
+      network.once("afterDrawing", function() {
+        network.moveTo({
+          scale: 1.2,
+          animation: {
+            duration: 800,
+            easingFunction: 'easeInOutQuad'
+          }
+        });
+      });
     }
   }, [overviewData]);
 
