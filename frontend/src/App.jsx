@@ -532,7 +532,7 @@ function App() {
                       <Tooltip cursor={{ fill: 'rgba(136, 192, 208, 0.15)' }} contentStyle={{ backgroundColor: 'var(--card-bg-solid)', border: '1px solid var(--border-color)', borderRadius: '8px' }} />
                       <Bar dataKey="count" radius={[6, 6, 0, 0]}>
                         {statsData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={['#88c0d0', '#81a1c1', '#5e81ac', '#a3be8c', '#ebcb8b', '#b48ead'][index % 6]} />
+                          <Cell key={`cell-${index}`} fill={['#2dd4bf', '#3b82f6', '#8b5cf6', '#d946ef', '#f43f5e', '#f59e0b'][index % 6]} />
                         ))}
                       </Bar>
                     </BarChart>
