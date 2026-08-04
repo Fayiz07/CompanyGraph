@@ -1,15 +1,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  --bg-dark: #3b4252;
-  --bg-darker: #2e3440;
+  --bg-dark: #272c36;
+  --bg-darker: #1e222b;
   --primary: #88c0d0;
   --primary-hover: #81a1c1;
   --text-light: #eceff4;
   --text-muted: #d8dee9;
-  --border-color: #4c566a;
-  --card-bg: rgba(59, 66, 82, 0.75);
-  --card-bg-solid: #3b4252;
+  --border-color: #3b4252;
+  --card-bg: rgba(39, 44, 54, 0.75);
+  --card-bg-solid: #272c36;
 }
 
 * {
@@ -30,7 +30,7 @@ body {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: radial-gradient(circle at top right, #3b4252, #2e3440);
+  background: radial-gradient(circle at top right, #272c36, #1e222b);
 }
 
 .header {
@@ -38,7 +38,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(46, 52, 64, 0.85);
+  background: rgba(30, 34, 43, 0.85);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-color);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
