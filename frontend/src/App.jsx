@@ -445,6 +445,16 @@ function App() {
 
       const network = new VisNetwork(overviewGraphRef.current, { nodes, edges }, options);
       overviewNetworkRef.current = network;
+
+      network.once("afterDrawing", function() {
+        network.moveTo({
+          scale: 0.4,
+          animation: {
+            duration: 800,
+            easingFunction: 'easeInOutQuad'
+          }
+        });
+      });
     }
   }, [overviewData]);
 
