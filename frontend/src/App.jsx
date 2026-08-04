@@ -391,7 +391,14 @@ function App() {
           from: edge.source,
           to: edge.target,
           label: edge.type,
-          font: { align: 'middle', color: '#e2e8f0', size: 9, strokeWidth: 2, strokeColor: '#0f172a' },
+          font: { 
+            align: 'middle', 
+            color: '#e2e8f0', 
+            size: 11,
+            strokeWidth: 4, 
+            strokeColor: '#0f172a',
+            vadjust: -15 
+          },
           value: edge.properties.weight,
           arrows: { to: { enabled: false } }
         };
@@ -401,33 +408,36 @@ function App() {
         nodes: {
           shape: 'box',
           margin: 12,
-          font: { color: '#ffffff', face: 'Inter, sans-serif', size: 14, multi: true, bold: '16px Inter' },
-          borderWidth: 1,
-          shapeProperties: { borderRadius: 8 }
+          font: { color: '#ffffff', face: 'Inter, sans-serif', size: 13, multi: true, bold: '14px Inter' },
+          borderWidth: 2,
+          borderWidthSelected: 4,
+          shadow: { enabled: true, color: 'rgba(0,0,0,0.4)', size: 10, x: 0, y: 4 },
+          shapeProperties: { borderRadius: 12 }
         },
         edges: {
-          color: { color: '#94a3b8' },
-          smooth: { type: 'continuous' },
-          scaling: {
-            min: 1,
-            max: 5
-          }
+          color: { color: '#64748b', highlight: '#94a3b8' },
+          width: 2,
+          smooth: { type: 'cubicBezier', forceDirection: 'vertical', roundness: 0.4 },
+          arrows: { to: { enabled: true, scaleFactor: 0.6 } }
         },
         groups: {
-          Department: { color: { background: '#059669', border: '#34d399' } },
-          Project: { color: { background: '#d97706', border: '#fbbf24' } }
+          Employee: { color: { background: '#2563eb', border: '#60a5fa', highlight: { background: '#1d4ed8', border: '#93c5fd' } } },
+          Department: { color: { background: '#059669', border: '#34d399', highlight: { background: '#047857', border: '#6ee7b7' } } },
+          Project: { color: { background: '#d97706', border: '#fbbf24', highlight: { background: '#b45309', border: '#fcd34d' } } }
         },
         layout: {
           hierarchical: {
             enabled: true,
             direction: 'UD',
             sortMethod: 'directed',
-            nodeSpacing: 250,
-            levelSeparation: 250
+            nodeSpacing: 350,
+            levelSeparation: 180
           }
         },
-        physics: { enabled: false },
-        interaction: { hover: true, tooltipDelay: 200, zoomView: true, dragView: true }
+        physics: {
+          enabled: false
+        },
+        interaction: { hover: true, tooltipDelay: 200, selectConnectedEdges: false, zoomView: true, dragView: true }
       };
 
       if (overviewNetworkRef.current) {
