@@ -421,9 +421,9 @@ function App() {
           arrows: { to: { enabled: true, scaleFactor: 0.6 } }
         },
         groups: {
-          Employee: { color: { background: '#db2777', border: '#f472b6', highlight: { background: '#be185d', border: '#fbcfe8' } } },
-          Department: { color: { background: '#0891b2', border: '#22d3ee', highlight: { background: '#0e7490', border: '#67e8f9' } } },
-          Project: { color: { background: '#d97706', border: '#fbbf24', highlight: { background: '#b45309', border: '#fcd34d' } } }
+          Employee: { color: { background: '#5e81ac', border: '#81a1c1', highlight: { background: '#4c566a', border: '#eceff4' } } },
+          Department: { color: { background: '#a3be8c', border: '#8fbcbb', highlight: { background: '#81a1c1', border: '#88c0d0' } } },
+          Project: { color: { background: '#ebcb8b', border: '#d08770', highlight: { background: '#bf616a', border: '#d8dee9' } } }
         },
         layout: {
           hierarchical: {
@@ -529,10 +529,10 @@ function App() {
                     <BarChart data={statsData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
                       <XAxis dataKey="department" stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 12 }} angle={-25} textAnchor="end" />
                       <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8' }} />
-                      <Tooltip cursor={{ fill: 'rgba(244, 63, 94, 0.1)' }} contentStyle={{ backgroundColor: 'var(--card-bg-solid)', border: '1px solid var(--border-color)', borderRadius: '8px' }} />
+                      <Tooltip cursor={{ fill: 'rgba(136, 192, 208, 0.15)' }} contentStyle={{ backgroundColor: 'var(--card-bg-solid)', border: '1px solid var(--border-color)', borderRadius: '8px' }} />
                       <Bar dataKey="count" radius={[6, 6, 0, 0]}>
                         {statsData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={['#f43f5e', '#ec4899', '#d946ef', '#a855f7', '#8b5cf6', '#6366f1'][index % 6]} />
+                          <Cell key={`cell-${index}`} fill={['#88c0d0', '#81a1c1', '#5e81ac', '#a3be8c', '#ebcb8b', '#b48ead'][index % 6]} />
                         ))}
                       </Bar>
                     </BarChart>
@@ -544,9 +544,9 @@ function App() {
                 <button 
                   onClick={openDirectory}
                   style={{ 
-                    background: 'rgba(244, 63, 94, 0.1)', 
-                    border: '1px solid rgba(244, 63, 94, 0.5)', 
-                    color: '#fb7185', 
+                    background: 'rgba(136, 192, 208, 0.1)', 
+                    border: '1px solid rgba(136, 192, 208, 0.5)', 
+                    color: '#88c0d0', 
                     display: 'flex', 
                     alignItems: 'center', 
                     gap: '8px', 
@@ -557,8 +557,8 @@ function App() {
                     transition: 'all 0.2s',
                     fontWeight: '500'
                   }}
-                  onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(244, 63, 94, 0.2)'; e.currentTarget.style.color = '#f43f5e'; }}
-                  onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(244, 63, 94, 0.1)'; e.currentTarget.style.color = '#fb7185'; }}
+                  onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(136, 192, 208, 0.2)'; e.currentTarget.style.color = '#81a1c1'; }}
+                  onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(136, 192, 208, 0.1)'; e.currentTarget.style.color = '#88c0d0'; }}
                 >
                   <List size={18} /> Browse All Employees
                 </button>
@@ -827,19 +827,19 @@ function App() {
             </div>
             <div className="modal-body" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', maxHeight: '70vh', overflowY: 'auto' }}>
               <div>
-                <h3 style={{ color: 'var(--text-light)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}><NetworkIcon size={18} color="#f43f5e"/> Purpose</h3>
+                <h3 style={{ color: 'var(--text-light)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}><NetworkIcon size={18} color="#88c0d0"/> Purpose</h3>
                 <p style={{ color: '#94a3b8', lineHeight: '1.6' }}>
                   This dashboard is a visualization tool built on top of a Graph Database. It allows you to explore our company's structure, employee hierarchy, and project collaborations in a highly interactive way.
                 </p>
               </div>
               <div>
-                <h3 style={{ color: 'var(--text-light)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}><Search size={18} color="#d946ef"/> Search & Explore</h3>
+                <h3 style={{ color: 'var(--text-light)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}><Search size={18} color="#a3be8c"/> Search & Explore</h3>
                 <p style={{ color: '#94a3b8', lineHeight: '1.6' }}>
                   Use the <strong>search dropdown</strong> in the top right to select a specific employee. This will reveal their immediate network, showing who they manage, who they report to, and what projects they work on.
                 </p>
               </div>
               <div>
-                <h3 style={{ color: 'var(--text-light)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={18} color="#f59e0b"/> Interactions</h3>
+                <h3 style={{ color: 'var(--text-light)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={18} color="#ebcb8b"/> Interactions</h3>
                 <ul style={{ color: '#94a3b8', lineHeight: '1.6', paddingLeft: '1.2rem', margin: 0 }}>
                   <li><strong>Click</strong> any node to view detailed information in the side panel.</li>
                   <li><strong>Double-click</strong> any node to automatically expand the graph and pull in their direct connections from the database!</li>
@@ -847,7 +847,7 @@ function App() {
                 </ul>
               </div>
               <div>
-                <h3 style={{ color: 'var(--text-light)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}><BarChart2 size={18} color="#a855f7"/> Advanced Analytics</h3>
+                <h3 style={{ color: 'var(--text-light)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}><BarChart2 size={18} color="#b48ead"/> Advanced Analytics</h3>
                 <p style={{ color: '#94a3b8', lineHeight: '1.6' }}>
                   When viewing an employee's profile, look at the bottom of the left panel for <strong>Advanced Graph Analytics</strong>. You can run complex graph algorithms directly against the database to find the Shortest Path between two people, extract deep reporting hierarchies, or discover massive project collaboration webs.
                 </p>

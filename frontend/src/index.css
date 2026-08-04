@@ -1,15 +1,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  --bg-dark: #1e1b4b;
-  --bg-darker: #0c0a09;
-  --primary: #f43f5e;
-  --primary-hover: #e11d48;
-  --text-light: #fff1f2;
-  --text-muted: #a8a29e;
-  --border-color: #292524;
-  --card-bg: rgba(28, 25, 23, 0.7);
-  --card-bg-solid: #1c1917;
+  --bg-dark: #3b4252;
+  --bg-darker: #2e3440;
+  --primary: #88c0d0;
+  --primary-hover: #81a1c1;
+  --text-light: #eceff4;
+  --text-muted: #d8dee9;
+  --border-color: #4c566a;
+  --card-bg: rgba(59, 66, 82, 0.75);
+  --card-bg-solid: #3b4252;
 }
 
 * {
@@ -30,7 +30,7 @@ body {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: radial-gradient(circle at top right, #2a122e, #0c0a09);
+  background: radial-gradient(circle at top right, #3b4252, #2e3440);
 }
 
 .header {
@@ -38,7 +38,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(12, 10, 9, 0.8);
+  background: rgba(46, 52, 64, 0.85);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-color);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
@@ -48,7 +48,7 @@ body {
 .header h1 {
   font-size: 1.5rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #f43f5e, #f59e0b);
+  background: linear-gradient(135deg, #88c0d0, #b48ead);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   letter-spacing: -0.025em;
