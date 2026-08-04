@@ -421,9 +421,9 @@ function App() {
           arrows: { to: { enabled: true, scaleFactor: 0.6 } }
         },
         groups: {
-          Employee: { color: { background: '#3b82f6', border: '#60a5fa', highlight: { background: '#2563eb', border: '#93c5fd' } } },
-          Department: { color: { background: '#2dd4bf', border: '#5eead4', highlight: { background: '#14b8a6', border: '#99f6e4' } } },
-          Project: { color: { background: '#8b5cf6', border: '#a78bfa', highlight: { background: '#7c3aed', border: '#c4b5fd' } } }
+          Employee: { color: { background: '#8b5cf6', border: '#a78bfa', highlight: { background: '#7c3aed', border: '#c4b5fd' } } },
+          Department: { color: { background: '#3b82f6', border: '#60a5fa', highlight: { background: '#2563eb', border: '#93c5fd' } } },
+          Project: { color: { background: '#ef4444', border: '#f87171', highlight: { background: '#dc2626', border: '#fca5a5' } } }
         },
         layout: {
           hierarchical: {
