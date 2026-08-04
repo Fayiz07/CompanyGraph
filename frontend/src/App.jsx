@@ -457,7 +457,7 @@ function App() {
         });
       });
     }
-  }, [overviewData]);
+  }, [overviewData, hasSearched]);
 
   return (
     <div className="app-container">
