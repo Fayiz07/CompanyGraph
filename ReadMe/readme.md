@@ -90,6 +90,11 @@ UI will run at http://localhost:5173
 
 ## UI and UX Design
 
+### Application Demo
+![Dashboard Demo 1](DemoIMG-1.jpg)
+![Dashboard Demo 2](DemoIMG-2.jpg)
+![Dashboard Demo 3](DemoIMG-3.jpg)
+
 The frontend was designed with a modern, intentional Dashboard Interface:
 - Clean Layout: Split-screen design so the user can read clear text data on the left while exploring the visual force-directed graph on the right.
 - Micro-interactions: Smooth CSS transitions on search bars, hover effects, and loading states.
