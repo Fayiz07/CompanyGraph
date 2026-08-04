@@ -421,8 +421,8 @@ function App() {
           arrows: { to: { enabled: true, scaleFactor: 0.6 } }
         },
         groups: {
-          Employee: { color: { background: '#2563eb', border: '#60a5fa', highlight: { background: '#1d4ed8', border: '#93c5fd' } } },
-          Department: { color: { background: '#059669', border: '#34d399', highlight: { background: '#047857', border: '#6ee7b7' } } },
+          Employee: { color: { background: '#db2777', border: '#f472b6', highlight: { background: '#be185d', border: '#fbcfe8' } } },
+          Department: { color: { background: '#0891b2', border: '#22d3ee', highlight: { background: '#0e7490', border: '#67e8f9' } } },
           Project: { color: { background: '#d97706', border: '#fbbf24', highlight: { background: '#b45309', border: '#fcd34d' } } }
         },
         layout: {
@@ -505,7 +505,7 @@ function App() {
               </div>
               {isOverviewLoading ? (
                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1, minHeight: '300px' }}>
-                  <Loader2 className="spinner" size={32} color="#3b82f6" />
+                  <Loader2 className="spinner" size={32} color="var(--primary)" />
                 </div>
               ) : (
                 <div className="graph-container" ref={overviewGraphRef} style={{ flex: 1, minHeight: '400px' }} />
@@ -517,22 +517,22 @@ function App() {
               {/* Stats Chart */}
               <div className="stats-container" style={{ width: '100%', height: '300px', flexShrink: 0 }}>
                 <h2 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '1.5rem' }}>
-                  <BarChart2 size={24} color="#3b82f6" /> 
+                  <BarChart2 size={24} color="var(--primary)" /> 
                   Company Breakdown
                 </h2>
                 {isStatsLoading ? (
                   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-                    <Loader2 className="spinner" size={32} color="#3b82f6" />
+                    <Loader2 className="spinner" size={32} color="var(--primary)" />
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={statsData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
                       <XAxis dataKey="department" stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 12 }} angle={-25} textAnchor="end" />
                       <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8' }} />
-                      <Tooltip cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }} contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }} />
+                      <Tooltip cursor={{ fill: 'rgba(244, 63, 94, 0.1)' }} contentStyle={{ backgroundColor: 'var(--card-bg-solid)', border: '1px solid var(--border-color)', borderRadius: '8px' }} />
                       <Bar dataKey="count" radius={[6, 6, 0, 0]}>
                         {statsData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4'][index % 6]} />
+                          <Cell key={`cell-${index}`} fill={['#f43f5e', '#ec4899', '#d946ef', '#a855f7', '#8b5cf6', '#6366f1'][index % 6]} />
                         ))}
                       </Bar>
                     </BarChart>
@@ -544,9 +544,9 @@ function App() {
                 <button 
                   onClick={openDirectory}
                   style={{ 
-                    background: 'rgba(59, 130, 246, 0.1)', 
-                    border: '1px solid rgba(59, 130, 246, 0.5)', 
-                    color: '#60a5fa', 
+                    background: 'rgba(244, 63, 94, 0.1)', 
+                    border: '1px solid rgba(244, 63, 94, 0.5)', 
+                    color: '#fb7185', 
                     display: 'flex', 
                     alignItems: 'center', 
                     gap: '8px', 
@@ -557,8 +557,8 @@ function App() {
                     transition: 'all 0.2s',
                     fontWeight: '500'
                   }}
-                  onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)'; e.currentTarget.style.color = '#93c5fd'; }}
-                  onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(59, 130, 246, 0.1)'; e.currentTarget.style.color = '#60a5fa'; }}
+                  onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(244, 63, 94, 0.2)'; e.currentTarget.style.color = '#f43f5e'; }}
+                  onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(244, 63, 94, 0.1)'; e.currentTarget.style.color = '#fb7185'; }}
                 >
                   <List size={18} /> Browse All Employees
                 </button>
@@ -791,7 +791,7 @@ function App() {
             <div className="modal-body">
               {isDirectoryLoading ? (
                 <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
-                  <Loader2 className="spinner" size={32} color="#3b82f6" />
+                  <Loader2 className="spinner" size={32} color="var(--primary)" />
                 </div>
               ) : (
                 <div className="directory-grid">
@@ -827,13 +827,13 @@ function App() {
             </div>
             <div className="modal-body" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', maxHeight: '70vh', overflowY: 'auto' }}>
               <div>
-                <h3 style={{ color: 'var(--text-light)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}><NetworkIcon size={18} color="#3b82f6"/> Purpose</h3>
+                <h3 style={{ color: 'var(--text-light)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}><NetworkIcon size={18} color="#f43f5e"/> Purpose</h3>
                 <p style={{ color: '#94a3b8', lineHeight: '1.6' }}>
                   This dashboard is a visualization tool built on top of a Graph Database. It allows you to explore our company's structure, employee hierarchy, and project collaborations in a highly interactive way.
                 </p>
               </div>
               <div>
-                <h3 style={{ color: 'var(--text-light)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}><Search size={18} color="#10b981"/> Search & Explore</h3>
+                <h3 style={{ color: 'var(--text-light)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}><Search size={18} color="#d946ef"/> Search & Explore</h3>
                 <p style={{ color: '#94a3b8', lineHeight: '1.6' }}>
                   Use the <strong>search dropdown</strong> in the top right to select a specific employee. This will reveal their immediate network, showing who they manage, who they report to, and what projects they work on.
                 </p>
@@ -847,7 +847,7 @@ function App() {
                 </ul>
               </div>
               <div>
-                <h3 style={{ color: 'var(--text-light)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}><BarChart2 size={18} color="#8b5cf6"/> Advanced Analytics</h3>
+                <h3 style={{ color: 'var(--text-light)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}><BarChart2 size={18} color="#a855f7"/> Advanced Analytics</h3>
                 <p style={{ color: '#94a3b8', lineHeight: '1.6' }}>
                   When viewing an employee's profile, look at the bottom of the left panel for <strong>Advanced Graph Analytics</strong>. You can run complex graph algorithms directly against the database to find the Shortest Path between two people, extract deep reporting hierarchies, or discover massive project collaboration webs.
                 </p>
