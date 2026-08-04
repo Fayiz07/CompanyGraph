@@ -492,7 +492,7 @@ function App() {
             </div>
 
             {/* Right Column */}
-            <div style={{ flex: '35', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            <div style={{ flex: '35', display: 'flex', flexDirection: 'column', background: 'var(--card-bg-solid)', borderRadius: '16px', border: '1px solid var(--border-color)', padding: '1.5rem', gap: '2rem', overflow: 'hidden' }}>
               {/* Stats Chart */}
               <div className="stats-container" style={{ width: '100%', height: '300px', flexShrink: 0 }}>
                 <h2 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '1.5rem' }}>
@@ -518,7 +518,7 @@ function App() {
                   </ResponsiveContainer>
                 )}
               </div>
-              <div style={{ flex: '1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1rem', background: 'var(--card-bg-solid)', borderRadius: '16px', padding: '2rem', border: '1px solid var(--border-color)' }}>
+              <div style={{ flex: '1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1.5rem' }}>
                 <p style={{ color: '#94a3b8' }}>Use the search bar above to explore the graph structure for a specific employee.</p>
                 <button 
                   onClick={openDirectory}
