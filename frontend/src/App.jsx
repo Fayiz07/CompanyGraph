@@ -20,6 +20,8 @@ function App() {
   const [showDirectory, setShowDirectory] = useState(false);
   const [allEmployees, setAllEmployees] = useState([]);
   const [isDirectoryLoading, setIsDirectoryLoading] = useState(false);
+  const [activeQuery, setActiveQuery] = useState(null);
+  const [queryInputs, setQueryInputs] = useState({ source: '', target: '', employee: '' });
   
   const graphRef = useRef(null);
   const networkRef = useRef(null);
@@ -89,8 +91,29 @@ function App() {
     const managerEdge = data.edges.find(e => e.source === rootNode.id && e.type === 'REPORTS_TO');
     const manager = managerEdge ? data.nodes.find(n => n.id === managerEdge.target) : null;
     
+    // Manager's manager
+    let managersManager = null;
+    if (manager) {
+      const mmEdge = data.edges.find(e => e.source === manager.id && e.type === 'REPORTS_TO');
+      managersManager = mmEdge ? data.nodes.find(n => n.id === mmEdge.target) : null;
+    }
+
+    // Coworkers (same manager, excluding self)
+    let coworkers = [];
+    if (manager) {
+      const coworkerEdges = data.edges.filter(e => e.target === manager.id && e.type === 'REPORTS_TO' && e.source !== rootNode.id);
+      coworkers = coworkerEdges.map(e => data.nodes.find(n => n.id === e.source)).filter(Boolean);
+    }
+    
     const reportsEdges = data.edges.filter(e => e.target === rootNode.id && e.type === 'REPORTS_TO');
     const reports = reportsEdges.map(e => data.nodes.find(n => n.id === e.source)).filter(Boolean);
+
+    // Indirect reports
+    let indirectReports = [];
+    reports.forEach(report => {
+      const irEdges = data.edges.filter(e => e.target === report.id && e.type === 'REPORTS_TO');
+      indirectReports.push(...irEdges.map(e => data.nodes.find(n => n.id === e.source)).filter(Boolean));
+    });
 
     const deptEdge = data.edges.find(e => e.source === rootNode.id && e.type === 'WORKS_IN');
     const department = deptEdge ? data.nodes.find(n => n.id === deptEdge.target) : null;
@@ -98,12 +121,25 @@ function App() {
     const projectEdges = data.edges.filter(e => e.source === rootNode.id && (e.type === 'WORKS_ON' || e.type === 'MANAGES'));
     const projects = projectEdges.map(e => data.nodes.find(n => n.id === e.target)).filter(Boolean);
 
+    // Project collaborators
+    let collaborators = [];
+    projects.forEach(project => {
+      const collEdges = data.edges.filter(e => e.target === project.id && (e.type === 'WORKS_ON' || e.type === 'MANAGES') && e.source !== rootNode.id);
+      collaborators.push(...collEdges.map(e => data.nodes.find(n => n.id === e.source)).filter(Boolean));
+    });
+    // Remove duplicates from collaborators
+    collaborators = [...new Map(collaborators.map(item => [item.id, item])).values()];
+
     return {
       ...rootNode.properties,
       manager: manager ? manager.properties.name : 'None',
+      managersManager: managersManager ? managersManager.properties.name : null,
+      coworkers: coworkers.map(c => c.properties.name),
       reports: reports.map(r => r.properties.name),
+      indirectReports: indirectReports.map(r => r.properties.name),
       department: department ? department.properties.name : 'Unknown',
-      projects: projects.map(p => p.properties.name)
+      projects: projects.map(p => p.properties.name),
+      collaborators: collaborators.map(c => c.properties.name)
     };
   };
 
@@ -159,6 +195,36 @@ function App() {
     setMatchingNodes([]);
     setSelectedNodeId(null);
     setSelectedNodeDetails(null);
+    setActiveQuery(null);
+  };
+
+  const executeAdvancedQuery = async (type) => {
+    setIsLoading(true);
+    setError(null);
+    setHasSearched(true);
+    setGraphData(null);
+    setMatchingNodes([]);
+    setSelectedNodeId(null);
+    setSelectedNodeDetails(null);
+    
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      let endpoint = '';
+      if (type === 'shortest') endpoint = `/api/shortest-path/?source=${encodeURIComponent(queryInputs.source)}&target=${encodeURIComponent(queryInputs.target)}`;
+      else if (type === 'hierarchy') endpoint = `/api/hierarchy/?manager=${encodeURIComponent(queryInputs.employee)}`;
+      else if (type === 'projects') endpoint = `/api/projects/?employee=${encodeURIComponent(queryInputs.employee)}`;
+      
+      const response = await fetch(`${apiUrl}${endpoint}`);
+      const data = await response.json();
+      
+      if (!response.ok) throw new Error(data.error || 'Failed to fetch graph data');
+      
+      setGraphData(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -263,6 +329,38 @@ function App() {
           }
         }
       });
+      // Handle node double click to expand graph
+      networkRef.current.on('doubleClick', async function (params) {
+        if (params.nodes.length > 0) {
+          const clickedNodeId = params.nodes[0];
+          try {
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+            const response = await fetch(`${apiUrl}/api/expand/?node_id=${encodeURIComponent(clickedNodeId)}`);
+            const newData = await response.json();
+            if (newData.nodes && newData.edges) {
+               setGraphData(prev => {
+                  const existingNodesMap = new Map(prev.nodes.map(n => [n.id, n]));
+                  newData.nodes.forEach(n => existingNodesMap.set(n.id, n));
+                  
+                  const existingEdges = prev.edges;
+                  const edgeSet = new Set(existingEdges.map(e => `${e.source}-${e.target}-${e.type}`));
+                  const newEdges = [];
+                  newData.edges.forEach(e => {
+                    const key = `${e.source}-${e.target}-${e.type}`;
+                    if (!edgeSet.has(key)) {
+                      edgeSet.add(key);
+                      newEdges.push(e);
+                    }
+                  });
+                  return { nodes: Array.from(existingNodesMap.values()), edges: [...existingEdges, ...newEdges] };
+               });
+            }
+          } catch(e) {
+            console.error("Failed to expand node", e);
+          }
+        }
+      });
+
     }
   }, [graphData]); // Re-run only when graphData completely changes
 
@@ -338,6 +436,35 @@ function App() {
                 <List size={18} /> Browse All Employees
               </button>
             </div>
+
+            <div style={{ marginTop: '2rem', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '2rem', width: '100%', maxWidth: '600px' }}>
+              <h3 style={{ textAlign: 'center', marginBottom: '1rem', color: '#f8fafc', fontSize: '1.2rem' }}>Advanced Graph Analytics</h3>
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                <button onClick={() => setActiveQuery('shortest')} style={{ background: activeQuery === 'shortest' ? 'rgba(59, 130, 246, 0.3)' : 'var(--card-bg)', border: '1px solid var(--border-color)', color: 'var(--text-light)', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' }}>Shortest Path</button>
+                <button onClick={() => setActiveQuery('hierarchy')} style={{ background: activeQuery === 'hierarchy' ? 'rgba(59, 130, 246, 0.3)' : 'var(--card-bg)', border: '1px solid var(--border-color)', color: 'var(--text-light)', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' }}>Deep Hierarchy</button>
+                <button onClick={() => setActiveQuery('projects')} style={{ background: activeQuery === 'projects' ? 'rgba(59, 130, 246, 0.3)' : 'var(--card-bg)', border: '1px solid var(--border-color)', color: 'var(--text-light)', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' }}>Project Collaborations</button>
+              </div>
+              
+              {activeQuery && (
+                <div style={{ marginTop: '1.5rem', padding: '1.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  {activeQuery === 'shortest' && (
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', justifyContent: 'center' }}>
+                      <input type="text" placeholder="Employee 1" className="search-input" style={{ width: '150px', padding: '0.5rem' }} value={queryInputs.source} onChange={e => setQueryInputs({...queryInputs, source: e.target.value})} />
+                      <span style={{color: '#94a3b8'}}>to</span>
+                      <input type="text" placeholder="Employee 2" className="search-input" style={{ width: '150px', padding: '0.5rem' }} value={queryInputs.target} onChange={e => setQueryInputs({...queryInputs, target: e.target.value})} />
+                      <button className="search-button" style={{minWidth: '0'}} onClick={() => executeAdvancedQuery('shortest')}>Find Path</button>
+                    </div>
+                  )}
+                  {(activeQuery === 'hierarchy' || activeQuery === 'projects') && (
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', justifyContent: 'center' }}>
+                      <input type="text" placeholder={activeQuery === 'hierarchy' ? "Manager Name" : "Employee Name"} className="search-input" style={{ width: '200px', padding: '0.5rem' }} value={queryInputs.employee} onChange={e => setQueryInputs({...queryInputs, employee: e.target.value})} />
+                      <button className="search-button" style={{minWidth: '0'}} onClick={() => executeAdvancedQuery(activeQuery)}>Run Query</button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
           </div>
         )}
 
@@ -407,9 +534,26 @@ function App() {
                       <Users size={18} className="detail-icon" />
                       <div>
                         <strong>Manager</strong>
-                        <p>{selectedNodeDetails.manager}</p>
+                        <p>
+                          {selectedNodeDetails.manager}
+                          {selectedNodeDetails.managersManager && <span style={{fontSize:'0.8rem', color:'#94a3b8', display:'block'}}>Reports to: {selectedNodeDetails.managersManager}</span>}
+                        </p>
                       </div>
                     </div>
+                    
+                    {selectedNodeDetails.coworkers.length > 0 && (
+                      <div className="detail-item">
+                        <Users size={18} className="detail-icon" />
+                        <div>
+                          <strong>Coworkers ({selectedNodeDetails.coworkers.length})</strong>
+                          <div className="reports-list">
+                            {selectedNodeDetails.coworkers.map((cw, idx) => (
+                              <span key={idx} className="report-badge">{cw}</span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     
                     <div className="detail-item">
                       <Briefcase size={18} className="detail-icon" />
@@ -418,6 +562,20 @@ function App() {
                         <p>{selectedNodeDetails.projects.length > 0 ? selectedNodeDetails.projects.join(', ') : 'None'}</p>
                       </div>
                     </div>
+
+                    {selectedNodeDetails.collaborators.length > 0 && (
+                      <div className="detail-item">
+                        <Users size={18} className="detail-icon" />
+                        <div>
+                          <strong>Project Collaborators ({selectedNodeDetails.collaborators.length})</strong>
+                          <div className="reports-list">
+                            {selectedNodeDetails.collaborators.map((c, idx) => (
+                              <span key={idx} className="report-badge">{c}</span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                     <div className="detail-item">
                       <Users size={18} className="detail-icon" />
@@ -430,6 +588,20 @@ function App() {
                         </div>
                       </div>
                     </div>
+
+                    {selectedNodeDetails.indirectReports.length > 0 && (
+                      <div className="detail-item">
+                        <Users size={18} className="detail-icon" />
+                        <div>
+                          <strong>Indirect Reports ({selectedNodeDetails.indirectReports.length})</strong>
+                          <div className="reports-list">
+                            {selectedNodeDetails.indirectReports.map((report, idx) => (
+                              <span key={idx} className="report-badge">{report}</span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (

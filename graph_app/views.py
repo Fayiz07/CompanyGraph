@@ -190,3 +190,181 @@ def get_all_employees(request):
                 return Response(employees)
     except Exception as e:
         return Response({"error": str(e)}, status=500)
+
+@api_view(['GET'])
+def expand_node(request):
+    node_id = request.query_params.get('node_id')
+    if not node_id:
+        return Response({"error": "node_id is required"}, status=400)
+    
+    try:
+        with GraphDatabase.driver(URI, auth=AUTH) as driver:
+            with driver.session() as session:
+                query = """
+                MATCH (start)
+                WHERE elementId(start) = $node_id OR start.id = $node_id
+                MATCH p = (start)-[]-(neighbor)
+                RETURN p LIMIT 50
+                """
+                result = session.run(query, node_id=node_id)
+                nodes = {}
+                edges = []
+
+                for record in result:
+                    path = record["p"]
+                    for node in path.nodes:
+                        node_id_str = str(node.id)
+                        if node_id_str not in nodes:
+                            nodes[node_id_str] = {
+                                "id": node_id_str,
+                                "label": list(node.labels)[0] if node.labels else "Unknown",
+                                "properties": dict(node)
+                            }
+                    for rel in path.relationships:
+                        edges.append({
+                            "source": str(rel.start_node.id),
+                            "target": str(rel.end_node.id),
+                            "type": rel.type,
+                            "properties": dict(rel)
+                        })
+
+                # Deduplicate edges
+                unique_edges = []
+                seen_edges = set()
+                for edge in edges:
+                    edge_key = (edge["source"], edge["target"], edge["type"])
+                    if edge_key not in seen_edges:
+                        seen_edges.add(edge_key)
+                        unique_edges.append(edge)
+
+                return Response({
+                    "nodes": list(nodes.values()),
+                    "edges": unique_edges
+                })
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+
+@api_view(['GET'])
+def shortest_path(request):
+    source = request.query_params.get('source')
+    target = request.query_params.get('target')
+    if not source or not target:
+        return Response({"error": "source and target are required"}, status=400)
+    
+    try:
+        with GraphDatabase.driver(URI, auth=AUTH) as driver:
+            with driver.session() as session:
+                query = """
+                MATCH (a:Employee), (b:Employee)
+                WHERE toLower(a.name) CONTAINS toLower($source) AND toLower(b.name) CONTAINS toLower($target)
+                MATCH p=shortestPath((a)-[*]-(b))
+                RETURN p LIMIT 1
+                """
+                result = session.run(query, source=source, target=target)
+                record = result.single()
+                if not record:
+                    return Response({"error": "No path found between these employees."}, status=404)
+                
+                path = record["p"]
+                nodes = {}
+                edges = []
+                for node in path.nodes:
+                    node_id_str = str(node.id)
+                    if node_id_str not in nodes:
+                        nodes[node_id_str] = {
+                            "id": node_id_str,
+                            "label": list(node.labels)[0] if node.labels else "Unknown",
+                            "properties": dict(node)
+                        }
+                for rel in path.relationships:
+                    edges.append({
+                        "source": str(rel.start_node.id),
+                        "target": str(rel.end_node.id),
+                        "type": rel.type,
+                        "properties": dict(rel)
+                    })
+                return Response({"nodes": list(nodes.values()), "edges": edges})
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+
+@api_view(['GET'])
+def deep_hierarchy(request):
+    manager = request.query_params.get('manager')
+    if not manager:
+        return Response({"error": "manager is required"}, status=400)
+    try:
+        with GraphDatabase.driver(URI, auth=AUTH) as driver:
+            with driver.session() as session:
+                query = """
+                MATCH p=(employee:Employee)-[:REPORTS_TO*]->(boss:Employee)
+                WHERE toLower(boss.name) CONTAINS toLower($manager)
+                RETURN p LIMIT 100
+                """
+                result = session.run(query, manager=manager)
+                nodes = {}
+                edges = []
+                for record in result:
+                    path = record["p"]
+                    for node in path.nodes:
+                        node_id_str = str(node.id)
+                        if node_id_str not in nodes:
+                            nodes[node_id_str] = {
+                                "id": node_id_str,
+                                "label": list(node.labels)[0] if node.labels else "Unknown",
+                                "properties": dict(node)
+                            }
+                    for rel in path.relationships:
+                        edge_key = (str(rel.start_node.id), str(rel.end_node.id), rel.type)
+                        edges.append({
+                            "source": str(rel.start_node.id),
+                            "target": str(rel.end_node.id),
+                            "type": rel.type,
+                            "properties": dict(rel)
+                        })
+                unique_edges = { (e["source"], e["target"], e["type"]): e for e in edges }.values()
+                
+                if not nodes:
+                    return Response({"error": "No hierarchy found for this manager."}, status=404)
+                return Response({"nodes": list(nodes.values()), "edges": list(unique_edges)})
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+
+@api_view(['GET'])
+def project_connections(request):
+    employee = request.query_params.get('employee')
+    if not employee:
+        return Response({"error": "employee is required"}, status=400)
+    try:
+        with GraphDatabase.driver(URI, auth=AUTH) as driver:
+            with driver.session() as session:
+                query = """
+                MATCH p=(start:Employee)-[:WORKS_ON|MANAGES]->(proj:Project)<-[:WORKS_ON|MANAGES]-(other:Employee)
+                WHERE toLower(start.name) CONTAINS toLower($employee)
+                RETURN p LIMIT 50
+                """
+                result = session.run(query, employee=employee)
+                nodes = {}
+                edges = []
+                for record in result:
+                    path = record["p"]
+                    for node in path.nodes:
+                        node_id_str = str(node.id)
+                        if node_id_str not in nodes:
+                            nodes[node_id_str] = {
+                                "id": node_id_str,
+                                "label": list(node.labels)[0] if node.labels else "Unknown",
+                                "properties": dict(node)
+                            }
+                    for rel in path.relationships:
+                        edges.append({
+                            "source": str(rel.start_node.id),
+                            "target": str(rel.end_node.id),
+                            "type": rel.type,
+                            "properties": dict(rel)
+                        })
+                unique_edges = { (e["source"], e["target"], e["type"]): e for e in edges }.values()
+                if not nodes:
+                    return Response({"error": "No project connections found."}, status=404)
+                return Response({"nodes": list(nodes.values()), "edges": list(unique_edges)})
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
