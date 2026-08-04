@@ -23,8 +23,13 @@ function App() {
   const [activeQuery, setActiveQuery] = useState(null);
   const [queryInputs, setQueryInputs] = useState({ source: '', target: '', employee: '' });
   
+  const [overviewData, setOverviewData] = useState(null);
+  const [isOverviewLoading, setIsOverviewLoading] = useState(true);
+  
   const graphRef = useRef(null);
   const networkRef = useRef(null);
+  const overviewGraphRef = useRef(null);
+  const overviewNetworkRef = useRef(null);
 
   const handleSearch = async (e, overrideTerm) => {
     e?.preventDefault();
@@ -144,8 +149,9 @@ function App() {
   };
 
   useEffect(() => {
-    // Fetch stats on mount
+    // Fetch stats and overview on mount
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    
     fetch(`${apiUrl}/api/stats/`)
       .then(res => res.json())
       .then(data => {
@@ -159,6 +165,19 @@ function App() {
       .catch(err => {
         console.error("Failed to fetch stats", err);
         setIsStatsLoading(false);
+      });
+
+    fetch(`${apiUrl}/api/overview/`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.nodes && data.edges) {
+          setOverviewData(data);
+        }
+        setIsOverviewLoading(false);
+      })
+      .catch(err => {
+        console.error("Failed to fetch overview", err);
+        setIsOverviewLoading(false);
       });
   }, []);
 
@@ -364,6 +383,68 @@ function App() {
     }
   }, [graphData]); // Re-run only when graphData completely changes
 
+  useEffect(() => {
+    if (overviewGraphRef.current && overviewData) {
+      const nodes = overviewData.nodes.map(node => ({
+        id: node.id,
+        label: node.label === 'Employee' 
+          ? `*${node.properties.name}*\n${node.properties.role || 'Employee'}` 
+          : `*${node.properties.name}*\n${node.label}`,
+        group: node.label,
+        title: JSON.stringify(node.properties, null, 2),
+      }));
+
+      const edges = overviewData.edges.map(edge => {
+        const isReportsTo = edge.type === 'REPORTS_TO';
+        return {
+          from: isReportsTo ? edge.target : edge.source,
+          to: isReportsTo ? edge.source : edge.target,
+          label: edge.type.replace('_', ' '),
+          font: { align: 'middle', color: '#e2e8f0', size: 9, strokeWidth: 2, strokeColor: '#0f172a' },
+          arrows: isReportsTo ? { from: { enabled: true, scaleFactor: 0.3 }, to: { enabled: false } } : undefined
+        };
+      });
+
+      const options = {
+        nodes: {
+          shape: 'box',
+          margin: 8,
+          font: { color: '#ffffff', face: 'Inter, sans-serif', size: 10, multi: true, bold: '11px Inter' },
+          borderWidth: 1,
+          shapeProperties: { borderRadius: 8 }
+        },
+        edges: {
+          color: { color: '#64748b' },
+          width: 1,
+          smooth: { type: 'cubicBezier', forceDirection: 'vertical', roundness: 0.4 },
+          arrows: { to: { enabled: true, scaleFactor: 0.4 } }
+        },
+        groups: {
+          Employee: { color: { background: '#2563eb', border: '#60a5fa' } },
+          Department: { color: { background: '#059669', border: '#34d399' } },
+          Project: { color: { background: '#d97706', border: '#fbbf24' } }
+        },
+        layout: {
+          hierarchical: {
+            enabled: true,
+            direction: 'UD',
+            sortMethod: 'directed',
+            nodeSpacing: 150,
+            levelSeparation: 100
+          }
+        },
+        physics: { enabled: false },
+        interaction: { hover: true, tooltipDelay: 200, zoomView: true, dragView: true }
+      };
+
+      if (overviewNetworkRef.current) {
+        overviewNetworkRef.current.destroy();
+      }
+
+      overviewNetworkRef.current = new VisNetwork(overviewGraphRef.current, { nodes, edges }, options);
+    }
+  }, [overviewData]);
+
   return (
     <div className="app-container">
       <header className="header">
@@ -387,54 +468,72 @@ function App() {
 
       <main className="main-content">
         {!hasSearched && !isLoading && (
-          <div className="empty-state">
-            <div className="stats-container" style={{ width: '100%', height: '300px', marginBottom: '2rem' }}>
-              <h2 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '1.5rem' }}>
-                <BarChart2 size={24} color="#3b82f6" /> 
-                Company Breakdown
-              </h2>
-              {isStatsLoading ? (
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+          <div className="empty-state" style={{ display: 'flex', flexDirection: 'row', gap: '2rem', height: '100%', minHeight: '500px', width: '100%', alignItems: 'stretch' }}>
+            
+            {/* Overview Graph (Left) */}
+            <div className="graph-card" style={{ flex: '1', display: 'flex', flexDirection: 'column', background: 'var(--card-bg-solid)', borderRadius: '16px', overflow: 'hidden' }}>
+              <div className="graph-header" style={{ borderBottom: '1px solid var(--border-color)', padding: '1rem' }}>
+                <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}><NetworkIcon size={18} /> Company Overview</h3>
+              </div>
+              {isOverviewLoading ? (
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1, minHeight: '300px' }}>
                   <Loader2 className="spinner" size={32} color="#3b82f6" />
                 </div>
               ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={statsData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
-                    <XAxis dataKey="department" stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 12 }} angle={-25} textAnchor="end" />
-                    <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8' }} />
-                    <Tooltip cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }} contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }} />
-                    <Bar dataKey="count" radius={[6, 6, 0, 0]}>
-                      {statsData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4'][index % 6]} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
+                <div className="graph-container" ref={overviewGraphRef} style={{ flex: 1, minHeight: '400px' }} />
               )}
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-              <p style={{ color: '#94a3b8' }}>Use the search bar above to explore the graph structure for a specific employee.</p>
-              <button 
-                onClick={openDirectory}
-                style={{ 
-                  background: 'rgba(59, 130, 246, 0.1)', 
-                  border: '1px solid rgba(59, 130, 246, 0.5)', 
-                  color: '#60a5fa', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '8px', 
-                  padding: '10px 20px', 
-                  borderRadius: '999px', 
-                  cursor: 'pointer',
-                  fontSize: '0.95rem',
-                  transition: 'all 0.2s',
-                  fontWeight: '500'
-                }}
-                onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)'; e.currentTarget.style.color = '#93c5fd'; }}
-                onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(59, 130, 246, 0.1)'; e.currentTarget.style.color = '#60a5fa'; }}
-              >
-                <List size={18} /> Browse All Employees
-              </button>
+
+            {/* Stats Chart (Right) */}
+            <div style={{ flex: '1', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div className="stats-container" style={{ width: '100%', height: '300px', flexShrink: 0 }}>
+                <h2 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '1.5rem' }}>
+                  <BarChart2 size={24} color="#3b82f6" /> 
+                  Company Breakdown
+                </h2>
+                {isStatsLoading ? (
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+                    <Loader2 className="spinner" size={32} color="#3b82f6" />
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={statsData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
+                      <XAxis dataKey="department" stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 12 }} angle={-25} textAnchor="end" />
+                      <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8' }} />
+                      <Tooltip cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }} contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }} />
+                      <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+                        {statsData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4'][index % 6]} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', marginTop: 'auto', marginBottom: 'auto' }}>
+                <p style={{ color: '#94a3b8' }}>Use the search bar above to explore the graph structure for a specific employee.</p>
+                <button 
+                  onClick={openDirectory}
+                  style={{ 
+                    background: 'rgba(59, 130, 246, 0.1)', 
+                    border: '1px solid rgba(59, 130, 246, 0.5)', 
+                    color: '#60a5fa', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '8px', 
+                    padding: '10px 20px', 
+                    borderRadius: '999px', 
+                    cursor: 'pointer',
+                    fontSize: '0.95rem',
+                    transition: 'all 0.2s',
+                    fontWeight: '500'
+                  }}
+                  onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)'; e.currentTarget.style.color = '#93c5fd'; }}
+                  onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(59, 130, 246, 0.1)'; e.currentTarget.style.color = '#60a5fa'; }}
+                >
+                  <List size={18} /> Browse All Employees
+                </button>
+              </div>
             </div>
           </div>
         )}

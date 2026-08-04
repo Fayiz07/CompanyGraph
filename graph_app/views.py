@@ -368,3 +368,44 @@ def project_connections(request):
                 return Response({"nodes": list(nodes.values()), "edges": list(unique_edges)})
     except Exception as e:
         return Response({"error": str(e)}, status=500)
+
+@api_view(['GET'])
+def get_overview_graph(request):
+    try:
+        with GraphDatabase.driver(URI, auth=AUTH) as driver:
+            with driver.session() as session:
+                query = """
+                MATCH (n)-[r]->(m)
+                RETURN n, r, m
+                """
+                result = session.run(query)
+                nodes = {}
+                edges = []
+                for record in result:
+                    n = record["n"]
+                    m = record["m"]
+                    r = record["r"]
+                    
+                    if str(n.id) not in nodes:
+                        nodes[str(n.id)] = {
+                            "id": str(n.id),
+                            "label": list(n.labels)[0] if n.labels else "Unknown",
+                            "properties": dict(n)
+                        }
+                    if str(m.id) not in nodes:
+                        nodes[str(m.id)] = {
+                            "id": str(m.id),
+                            "label": list(m.labels)[0] if m.labels else "Unknown",
+                            "properties": dict(m)
+                        }
+                    edges.append({
+                        "source": str(r.start_node.id),
+                        "target": str(r.end_node.id),
+                        "type": r.type,
+                        "properties": dict(r)
+                    })
+                
+                unique_edges = { (e["source"], e["target"], e["type"]): e for e in edges }.values()
+                return Response({"nodes": list(nodes.values()), "edges": list(unique_edges)})
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
