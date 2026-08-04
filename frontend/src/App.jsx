@@ -436,35 +436,6 @@ function App() {
                 <List size={18} /> Browse All Employees
               </button>
             </div>
-
-            <div style={{ marginTop: '2rem', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '2rem', width: '100%', maxWidth: '600px' }}>
-              <h3 style={{ textAlign: 'center', marginBottom: '1rem', color: '#f8fafc', fontSize: '1.2rem' }}>Advanced Graph Analytics</h3>
-              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-                <button onClick={() => setActiveQuery('shortest')} style={{ background: activeQuery === 'shortest' ? 'rgba(59, 130, 246, 0.3)' : 'var(--card-bg)', border: '1px solid var(--border-color)', color: 'var(--text-light)', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' }}>Shortest Path</button>
-                <button onClick={() => setActiveQuery('hierarchy')} style={{ background: activeQuery === 'hierarchy' ? 'rgba(59, 130, 246, 0.3)' : 'var(--card-bg)', border: '1px solid var(--border-color)', color: 'var(--text-light)', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' }}>Deep Hierarchy</button>
-                <button onClick={() => setActiveQuery('projects')} style={{ background: activeQuery === 'projects' ? 'rgba(59, 130, 246, 0.3)' : 'var(--card-bg)', border: '1px solid var(--border-color)', color: 'var(--text-light)', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' }}>Project Collaborations</button>
-              </div>
-              
-              {activeQuery && (
-                <div style={{ marginTop: '1.5rem', padding: '1.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  {activeQuery === 'shortest' && (
-                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', justifyContent: 'center' }}>
-                      <input type="text" placeholder="Employee 1" className="search-input" style={{ width: '150px', padding: '0.5rem' }} value={queryInputs.source} onChange={e => setQueryInputs({...queryInputs, source: e.target.value})} />
-                      <span style={{color: '#94a3b8'}}>to</span>
-                      <input type="text" placeholder="Employee 2" className="search-input" style={{ width: '150px', padding: '0.5rem' }} value={queryInputs.target} onChange={e => setQueryInputs({...queryInputs, target: e.target.value})} />
-                      <button className="search-button" style={{minWidth: '0'}} onClick={() => executeAdvancedQuery('shortest')}>Find Path</button>
-                    </div>
-                  )}
-                  {(activeQuery === 'hierarchy' || activeQuery === 'projects') && (
-                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', justifyContent: 'center' }}>
-                      <input type="text" placeholder={activeQuery === 'hierarchy' ? "Manager Name" : "Employee Name"} className="search-input" style={{ width: '200px', padding: '0.5rem' }} value={queryInputs.employee} onChange={e => setQueryInputs({...queryInputs, employee: e.target.value})} />
-                      <button className="search-button" style={{minWidth: '0'}} onClick={() => executeAdvancedQuery(activeQuery)}>Run Query</button>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
           </div>
         )}
 
@@ -609,6 +580,35 @@ function App() {
                   <p>Select a node to view details.</p>
                 </div>
               )}
+
+              {/* Advanced Analytics Panel (Moved here) */}
+              <div style={{ marginTop: '1.5rem', background: 'var(--card-bg-solid)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.5rem', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
+                <h3 style={{ textAlign: 'center', marginBottom: '1rem', color: '#f8fafc', fontSize: '1.1rem' }}>Advanced Graph Analytics</h3>
+                <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                  <button onClick={() => setActiveQuery('shortest')} style={{ background: activeQuery === 'shortest' ? 'rgba(59, 130, 246, 0.3)' : 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'var(--text-light)', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s', fontSize: '0.85rem' }}>Shortest Path</button>
+                  <button onClick={() => setActiveQuery('hierarchy')} style={{ background: activeQuery === 'hierarchy' ? 'rgba(59, 130, 246, 0.3)' : 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'var(--text-light)', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s', fontSize: '0.85rem' }}>Hierarchy</button>
+                  <button onClick={() => setActiveQuery('projects')} style={{ background: activeQuery === 'projects' ? 'rgba(59, 130, 246, 0.3)' : 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'var(--text-light)', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s', fontSize: '0.85rem' }}>Collabs</button>
+                </div>
+                
+                {activeQuery && (
+                  <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    {activeQuery === 'shortest' && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <input type="text" placeholder="Employee 1" className="search-input" style={{ width: '100%', padding: '0.4rem', fontSize: '0.85rem' }} value={queryInputs.source} onChange={e => setQueryInputs({...queryInputs, source: e.target.value})} />
+                        <span style={{color: '#94a3b8', fontSize: '0.8rem', textAlign: 'center'}}>to</span>
+                        <input type="text" placeholder="Employee 2" className="search-input" style={{ width: '100%', padding: '0.4rem', fontSize: '0.85rem' }} value={queryInputs.target} onChange={e => setQueryInputs({...queryInputs, target: e.target.value})} />
+                        <button className="search-button" style={{minWidth: '0', padding: '0.4rem', marginTop: '0.5rem', fontSize: '0.85rem'}} onClick={() => executeAdvancedQuery('shortest')}>Find Path</button>
+                      </div>
+                    )}
+                    {(activeQuery === 'hierarchy' || activeQuery === 'projects') && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <input type="text" placeholder={activeQuery === 'hierarchy' ? "Manager Name" : "Employee Name"} className="search-input" style={{ width: '100%', padding: '0.4rem', fontSize: '0.85rem' }} value={queryInputs.employee} onChange={e => setQueryInputs({...queryInputs, employee: e.target.value})} />
+                        <button className="search-button" style={{minWidth: '0', padding: '0.4rem', fontSize: '0.85rem'}} onClick={() => executeAdvancedQuery(activeQuery)}>Run Query</button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
             
             <div className="dashboard-right">
