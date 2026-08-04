@@ -232,6 +232,20 @@ function App() {
       if (!response.ok) throw new Error(data.error || 'Failed to fetch graph data');
       
       setGraphData(data);
+      
+      if (type === 'hierarchy' || type === 'projects') {
+        const rootNode = data.nodes.find(n => n.properties.name === queryInputs.employee);
+        if (rootNode) {
+          setSelectedNodeId(rootNode.id);
+          setSelectedNodeDetails(extractNodeDetails(rootNode, data));
+        }
+      } else if (type === 'shortest') {
+        const sourceNode = data.nodes.find(n => n.properties.name === queryInputs.source);
+        if (sourceNode) {
+          setSelectedNodeId(sourceNode.id);
+          setSelectedNodeDetails(extractNodeDetails(sourceNode, data));
+        }
+      }
     } catch (err) {
       setError(err.message);
     } finally {
