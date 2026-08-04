@@ -539,7 +539,7 @@ function App() {
                   </ResponsiveContainer>
                 )}
               </div>
-              <div style={{ flex: '1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1.5rem' }}>
+              <div style={{ flex: '1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1rem', paddingTop: '1.5rem' }}>
                 <p style={{ color: '#94a3b8' }}>Use the search bar above to explore the graph structure for a specific employee.</p>
                 <button 
                   onClick={openDirectory}
