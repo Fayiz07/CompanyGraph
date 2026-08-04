@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Search, Loader2, Network as NetworkIcon, User, Building, Briefcase, Users, CheckCircle, BarChart2, Home } from 'lucide-react';
+import { Search, Loader2, Network as NetworkIcon, User, Building, Briefcase, Users, CheckCircle, BarChart2, Home, List, X } from 'lucide-react';
 import { Network as VisNetwork } from 'vis-network';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import './index.css';
@@ -17,6 +17,9 @@ function App() {
   const [selectedNodeDetails, setSelectedNodeDetails] = useState(null);
   const [statsData, setStatsData] = useState([]);
   const [isStatsLoading, setIsStatsLoading] = useState(true);
+  const [showDirectory, setShowDirectory] = useState(false);
+  const [allEmployees, setAllEmployees] = useState([]);
+  const [isDirectoryLoading, setIsDirectoryLoading] = useState(false);
   
   const graphRef = useRef(null);
   const networkRef = useRef(null);
@@ -61,15 +64,6 @@ function App() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleHome = () => {
-    setSearchTerm('');
-    setHasSearched(false);
-    setGraphData(null);
-    setMatchingNodes([]);
-    setSelectedNodeId(null);
-    setSelectedNodeDetails(null);
   };
 
   const handleSelectNode = (nodeId, data = graphData) => {
@@ -126,6 +120,41 @@ function App() {
         setIsStatsLoading(false);
       });
   }, []);
+
+  const openDirectory = () => {
+    setShowDirectory(true);
+    if (allEmployees.length === 0) {
+      setIsDirectoryLoading(true);
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      fetch(`${apiUrl}/api/employees/`)
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            setAllEmployees(data);
+          }
+          setIsDirectoryLoading(false);
+        })
+        .catch(err => {
+          console.error("Failed to fetch employees", err);
+          setIsDirectoryLoading(false);
+        });
+    }
+  };
+
+  const handleDirectoryClick = (name) => {
+    setShowDirectory(false);
+    setSearchTerm(name);
+    handleSearch(new Event('submit'), name);
+  };
+
+  const handleHome = () => {
+    setSearchTerm('');
+    setHasSearched(false);
+    setGraphData(null);
+    setMatchingNodes([]);
+    setSelectedNodeId(null);
+    setSelectedNodeDetails(null);
+  };
 
   useEffect(() => {
     if (graphRef.current && graphData) {
@@ -276,7 +305,30 @@ function App() {
                 </ResponsiveContainer>
               )}
             </div>
-            <p style={{ marginTop: '1.5rem', color: '#94a3b8' }}>Use the search bar above to explore the graph structure for a specific employee.</p>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+              <p style={{ color: '#94a3b8' }}>Use the search bar above to explore the graph structure for a specific employee.</p>
+              <button 
+                onClick={openDirectory}
+                style={{ 
+                  background: 'rgba(59, 130, 246, 0.1)', 
+                  border: '1px solid rgba(59, 130, 246, 0.5)', 
+                  color: '#60a5fa', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '8px', 
+                  padding: '10px 20px', 
+                  borderRadius: '999px', 
+                  cursor: 'pointer',
+                  fontSize: '0.95rem',
+                  transition: 'all 0.2s',
+                  fontWeight: '500'
+                }}
+                onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)'; e.currentTarget.style.color = '#93c5fd'; }}
+                onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(59, 130, 246, 0.1)'; e.currentTarget.style.color = '#60a5fa'; }}
+              >
+                <List size={18} /> Browse All Employees
+              </button>
+            </div>
           </div>
         )}
 
@@ -409,6 +461,41 @@ function App() {
           </div>
         )}
       </main>
+
+      {/* Employee Directory Modal */}
+      {showDirectory && (
+        <div className="modal-overlay" onClick={() => setShowDirectory(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Employee Directory</h3>
+              <button className="close-btn" onClick={() => setShowDirectory(false)}><X size={20} /></button>
+            </div>
+            <div className="modal-body">
+              {isDirectoryLoading ? (
+                <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
+                  <Loader2 className="spinner" size={32} color="#3b82f6" />
+                </div>
+              ) : (
+                <div className="directory-grid">
+                  {allEmployees.map((emp, idx) => (
+                    <div 
+                      key={idx} 
+                      className="directory-item"
+                      onClick={() => handleDirectoryClick(emp.name)}
+                    >
+                      <User size={16} className="text-primary" />
+                      <div>
+                        <strong>{emp.name}</strong>
+                        <span>{emp.role}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

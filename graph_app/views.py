@@ -169,3 +169,24 @@ def get_department_stats(request):
                 return Response(stats)
     except Exception as e:
         return Response({"error": str(e)}, status=500)
+
+@api_view(['GET'])
+def get_all_employees(request):
+    try:
+        with GraphDatabase.driver(URI, auth=AUTH) as driver:
+            with driver.session() as session:
+                query = """
+                MATCH (e:Employee)
+                RETURN e.name as name, e.role as role
+                ORDER BY e.name
+                """
+                result = session.run(query)
+                employees = []
+                for record in result:
+                    employees.append({
+                        "name": record["name"],
+                        "role": record["role"]
+                    })
+                return Response(employees)
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
