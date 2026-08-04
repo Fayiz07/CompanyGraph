@@ -24,9 +24,10 @@ function App() {
   const graphRef = useRef(null);
   const networkRef = useRef(null);
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!searchTerm.trim()) return;
+  const handleSearch = async (e, overrideTerm) => {
+    e?.preventDefault();
+    const termToSearch = overrideTerm || searchTerm;
+    if (!termToSearch.trim()) return;
 
     setIsLoading(true);
     setError(null);
@@ -38,7 +39,7 @@ function App() {
 
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      const response = await fetch(`${apiUrl}/api/graph/?employee=${encodeURIComponent(searchTerm)}`);
+      const response = await fetch(`${apiUrl}/api/graph/?employee=${encodeURIComponent(termToSearch)}`);
       const data = await response.json();
       
       if (!response.ok) {
@@ -51,7 +52,7 @@ function App() {
         setGraphData(data);
         
         // Find ALL root nodes that match the search term
-        const matches = data.nodes.filter(n => n.label === 'Employee' && n.properties.name.toLowerCase().includes(searchTerm.toLowerCase()));
+        const matches = data.nodes.filter(n => n.label === 'Employee' && n.properties.name.toLowerCase().includes(termToSearch.toLowerCase()));
         
         setMatchingNodes(matches);
         
@@ -75,8 +76,12 @@ function App() {
     
     // Highlight node in vis-network
     if (networkRef.current) {
-      networkRef.current.selectNodes([nodeId]);
-      networkRef.current.focus(nodeId, { scale: 1.2, animation: { duration: 500, easingFunction: 'easeInOutQuad' } });
+      try {
+        networkRef.current.selectNodes([nodeId]);
+        networkRef.current.focus(nodeId, { scale: 1.2, animation: { duration: 500, easingFunction: 'easeInOutQuad' } });
+      } catch (e) {
+        console.warn("Could not select node", nodeId, e);
+      }
     }
   };
 
@@ -144,7 +149,7 @@ function App() {
   const handleDirectoryClick = (name) => {
     setShowDirectory(false);
     setSearchTerm(name);
-    handleSearch(new Event('submit'), name);
+    handleSearch(null, name);
   };
 
   const handleHome = () => {
@@ -233,7 +238,11 @@ function App() {
       // Auto-select initial node once network is stable
       if (selectedNodeId) {
         networkRef.current.once("afterDrawing", () => {
-          networkRef.current.selectNodes([selectedNodeId]);
+          try {
+            networkRef.current.selectNodes([selectedNodeId]);
+          } catch (e) {
+            console.warn("Could not select node on init", selectedNodeId, e);
+          }
         });
       }
       
