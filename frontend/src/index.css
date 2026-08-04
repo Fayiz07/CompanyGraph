@@ -553,6 +553,18 @@ body {
 }
 
 @media (max-width: 768px) {
+  body {
+    overflow-y: auto !important;
+  }
+  .app-container {
+    height: auto !important;
+    min-height: 100vh;
+  }
+  .main-content {
+    height: auto !important;
+    min-height: auto !important;
+    padding: 1.5rem !important;
+  }
   .header {
     flex-direction: column !important;
     align-items: flex-start !important;
@@ -575,6 +587,8 @@ body {
   .empty-state {
     flex-direction: column !important;
     gap: 1rem !important;
+    height: auto !important;
+    min-height: 0 !important;
   }
   .empty-state > div {
     flex: none !important;
