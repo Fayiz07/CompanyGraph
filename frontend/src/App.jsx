@@ -463,7 +463,9 @@ function App() {
       overviewNetworkRef.current = network;
 
       network.once("afterDrawing", function() {
-        network.fit({
+        network.fit({ animation: false }); // instantly center
+        network.moveTo({
+          scale: 0.6,
           animation: {
             duration: 800,
             easingFunction: 'easeInOutQuad'
@@ -540,7 +542,7 @@ function App() {
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={statsData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
+                    <BarChart data={statsData} margin={{ top: 10, right: 30, left: 0, bottom: 60 }}>
                       <XAxis dataKey="department" stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 12 }} angle={-25} textAnchor="end" />
                       <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8' }} />
                       <Tooltip cursor={{ fill: 'rgba(136, 192, 208, 0.15)' }} contentStyle={{ backgroundColor: 'var(--card-bg-solid)', border: '1px solid var(--border-color)', borderRadius: '8px' }} />
