@@ -463,8 +463,7 @@ function App() {
       overviewNetworkRef.current = network;
 
       network.once("afterDrawing", function() {
-        network.moveTo({
-          scale: 0.65,
+        network.fit({
           animation: {
             duration: 800,
             easingFunction: 'easeInOutQuad'

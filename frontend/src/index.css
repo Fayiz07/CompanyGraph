@@ -594,6 +594,9 @@ body {
     flex: none !important;
     width: 100% !important;
   }
+  .empty-state .graph-card {
+    height: 600px !important;
+  }
   .dashboard {
     flex-direction: column !important;
     height: auto !important;
